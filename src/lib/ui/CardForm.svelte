@@ -51,7 +51,12 @@
 
 	<div class="field">
 		<label for="github">GitHub</label>
-		<input id="github" type="url" bind:value={card.github} placeholder="https://github.com/username" />
+		<input
+			id="github"
+			type="url"
+			bind:value={card.github}
+			placeholder="https://github.com/username"
+		/>
 	</div>
 
 	<div class="field">

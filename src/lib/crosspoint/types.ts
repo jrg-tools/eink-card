@@ -16,21 +16,13 @@ export interface UploadResult {
 
 export interface DeviceConfig {
 	baseUrl: string;
-	transport: 'http' | 'websocket';
-	uploadPath: string;
 	/** Upload the card into /.sleep/ and switch the sleep screen to Custom. */
 	setAsSleepScreen: boolean;
 }
 
 export const defaultDeviceConfig: DeviceConfig = {
 	baseUrl: 'http://crosspoint.local',
-	transport: 'http',
-	uploadPath: '/',
 	setAsSleepScreen: true
 };
 
 export type ConnectionState = 'unknown' | 'checking' | 'connected' | 'disconnected' | 'unsupported';
-
-export interface CrossPointTransport {
-	upload(file: Blob, filename: string, path?: string): Promise<UploadResult>;
-}

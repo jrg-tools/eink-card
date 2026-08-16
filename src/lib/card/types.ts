@@ -1,5 +1,4 @@
 export type Orientation = 'portrait' | 'landscape';
-export type TemplateId = 'minimal' | 'classic' | 'modern';
 
 export interface BusinessCard {
 	orientation: Orientation;
@@ -19,14 +18,6 @@ export interface BusinessCard {
 		value: string;
 		label?: string;
 	};
-	template: TemplateId;
-}
-
-export interface RenderOptions {
-	width: number;
-	height: number;
-	orientation: Orientation;
-	template: string;
 }
 
 export const X3_WIDTH = 528;

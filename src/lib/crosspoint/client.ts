@@ -1,11 +1,10 @@
-import type { CrossPointTransport, DeviceConfig, DeviceStatus, UploadResult } from './types';
+import type { DeviceConfig, DeviceStatus, UploadResult } from './types';
 import { HttpUploadTransport } from './http';
-import { WebSocketUploadTransport } from './websocket';
 import { DeviceTimeoutError, DeviceUnavailableError, SettingsUpdateError } from './errors';
 
 const STATUS_TIMEOUT_MS = 1500;
 const SETTINGS_TIMEOUT_MS = 5000;
-const DELETE_TIMEOUT_MS = 5000;
+const REQUEST_TIMEOUT_MS = 5000;
 
 /** Directory scanned for custom sleep images in "Custom" sleep mode. */
 export const SLEEP_IMAGE_DIR = '/.sleep';
@@ -15,13 +14,10 @@ const LEGACY_ROOT_SLEEP_IMAGE = '/sleep.bmp';
 export const SLEEP_SCREEN_CUSTOM = 2;
 
 export class CrossPointClient {
-	private transport: CrossPointTransport;
+	private transport: HttpUploadTransport;
 
 	constructor(private config: DeviceConfig) {
-		this.transport =
-			config.transport === 'websocket'
-				? new WebSocketUploadTransport(config.baseUrl)
-				: new HttpUploadTransport(config.baseUrl);
+		this.transport = new HttpUploadTransport(config.baseUrl);
 	}
 
 	async status(): Promise<DeviceStatus> {
@@ -43,24 +39,48 @@ export class CrossPointClient {
 		}
 	}
 
+	/**
+	 * Upload a file, deleting any existing file with the same name first
+	 * (some firmware versions reject overwrites).
+	 */
 	async upload(file: Blob, filename: string, path?: string): Promise<UploadResult> {
-		const dest = path ?? this.config.uploadPath;
-		// POST /upload overwrites existing files, so no pre-delete is needed.
+		const dest = (path ?? '/').replace(/\/+$/, '') || '/';
+		const target = dest === '/' ? `/${filename}` : `${dest}/${filename}`;
+		if (await this.fileExists(target)) {
+			await this.deleteFile(target);
+		}
 		return this.transport.upload(file, filename, dest);
 	}
 
 	/**
-	 * Create a directory via POST /mkdir. Errors are ignored (the directory
-	 * most likely already exists).
+	 * List a directory via GET /api/files.
+	 * Returns null when the directory does not exist or cannot be listed.
 	 */
-	async ensureDir(dir: string): Promise<void> {
+	async listFiles(dir: string): Promise<Array<{ name: string; isDirectory: boolean }> | null> {
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+		try {
+			const res = await fetch(`${this.config.baseUrl}/api/files?path=${encodeURIComponent(dir)}`, {
+				signal: controller.signal
+			});
+			if (!res.ok) return null;
+			return (await res.json()) as Array<{ name: string; isDirectory: boolean }>;
+		} catch {
+			return null;
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
+	/** Create a directory via POST /mkdir. */
+	async mkdir(dir: string): Promise<void> {
 		const clean = dir.replace(/\/+$/, '');
 		const idx = clean.lastIndexOf('/');
 		const parent = idx <= 0 ? '/' : clean.slice(0, idx);
 		const name = clean.slice(idx + 1);
 		if (!name) return;
 		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
+		const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 		try {
 			await fetch(`${this.config.baseUrl}/mkdir`, {
 				method: 'POST',
@@ -80,21 +100,8 @@ export class CrossPointClient {
 		const idx = path.lastIndexOf('/');
 		const parent = idx <= 0 ? '/' : path.slice(0, idx);
 		const name = path.slice(idx + 1);
-		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
-		try {
-			const res = await fetch(
-				`${this.config.baseUrl}/api/files?path=${encodeURIComponent(parent)}`,
-				{ signal: controller.signal }
-			);
-			if (!res.ok) return false;
-			const items = (await res.json()) as Array<{ name: string; isDirectory: boolean }>;
-			return items.some((it) => !it.isDirectory && it.name === name);
-		} catch {
-			return false;
-		} finally {
-			clearTimeout(timer);
-		}
+		const items = await this.listFiles(parent);
+		return items?.some((it) => !it.isDirectory && it.name === name) ?? false;
 	}
 
 	/**
@@ -103,7 +110,7 @@ export class CrossPointClient {
 	 */
 	async deleteFile(path: string): Promise<void> {
 		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
+		const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 		try {
 			await fetch(`${this.config.baseUrl}/delete`, {
 				method: 'POST',
@@ -120,8 +127,9 @@ export class CrossPointClient {
 
 	/**
 	 * Make the card show whenever the device sleeps ("cover"):
-	 * 1. Ensure the /.sleep custom sleep-image directory exists.
-	 * 2. Upload the image once as /.sleep/<filename> (uploads overwrite).
+	 * 1. List /.sleep; create it only if the listing fails (does not exist).
+	 * 2. Upload the image once as /.sleep/<filename> (upload() deletes an
+	 *    existing file with the same name first).
 	 * 3. Remove a legacy root /sleep.bmp only if it actually exists
 	 *    (it takes priority over /.sleep/ images).
 	 * 4. Set the sleepScreen setting to Custom (index 2 in CrossPointSettings.h).
@@ -130,7 +138,9 @@ export class CrossPointClient {
 	 * supported way to pin an image to the screen.
 	 */
 	async setAsSleepScreen(file: Blob, filename: string): Promise<void> {
-		await this.ensureDir(SLEEP_IMAGE_DIR);
+		if ((await this.listFiles(SLEEP_IMAGE_DIR)) === null) {
+			await this.mkdir(SLEEP_IMAGE_DIR);
+		}
 		await this.upload(file, filename, SLEEP_IMAGE_DIR);
 		if (await this.fileExists(LEGACY_ROOT_SLEEP_IMAGE)) {
 			await this.deleteFile(LEGACY_ROOT_SLEEP_IMAGE);

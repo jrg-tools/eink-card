@@ -245,38 +245,38 @@ function drawContactRow(
 // ---------------------------------------------------------------------------
 
 async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard): Promise<void> {
-	const W = X3_WIDTH; // 528
-	const H = X3_HEIGHT; // 792
-	const M = 48;
+	const W = X3_WIDTH;
+	const H = X3_HEIGHT;
+	const M = 40;
 	const contentW = W - M * 2;
 
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'alphabetic';
 	const cx = W / 2;
-	let y = 128;
+	let y = 120;
 
 	// Nickname (if any) is the biggest element; the name goes smaller below it.
 	const nickname = card.nickname?.trim();
 	if (nickname) {
 		drawText(ctx, nickname.toUpperCase(), cx, y, {
 			maxWidth: contentW,
-			maxSize: 64,
-			minSize: 36,
+			maxSize: 80,
+			minSize: 44,
 			weight: '700',
 			letterSpacing: 2
 		});
-		y += 44;
+		y += 54;
 		drawText(ctx, card.name, cx, y, {
 			maxWidth: contentW,
-			maxSize: 26,
-			minSize: 17,
+			maxSize: 32,
+			minSize: 20,
 			color: MID_GRAY
 		});
 	} else {
 		drawText(ctx, card.name.toUpperCase(), cx, y, {
 			maxWidth: contentW,
-			maxSize: 56,
-			minSize: 32,
+			maxSize: 68,
+			minSize: 38,
 			weight: '700',
 			letterSpacing: 2
 		});
@@ -284,50 +284,50 @@ async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard)
 
 	// Role
 	if (card.role?.trim()) {
-		y += 46;
+		y += 54;
 		drawText(ctx, card.role, cx, y, {
 			maxWidth: contentW,
-			maxSize: 28,
-			minSize: 18,
+			maxSize: 34,
+			minSize: 22,
 			color: MID_GRAY
 		});
 	}
 
 	// Company
 	if (card.company?.trim()) {
-		y += 42;
+		y += 48;
 		drawText(ctx, card.company.toUpperCase(), cx, y, {
 			maxWidth: contentW,
-			maxSize: 22,
-			minSize: 15,
+			maxSize: 27,
+			minSize: 18,
 			weight: '600',
 			color: INK
 		});
 	}
 
 	// Divider — short, centered
-	y += 42;
+	y += 44;
 	ctx.fillStyle = INK;
-	ctx.fillRect(cx - 40, y, 80, 3);
-	y += 20;
+	ctx.fillRect(cx - 45, y, 90, 4);
+	y += 22;
 
 	// Tagline
 	if (card.tagline?.trim()) {
-		y += 30;
+		y += 36;
 		drawText(ctx, `“${card.tagline.trim()}”`, cx, y, {
 			maxWidth: contentW,
-			maxSize: 21,
-			minSize: 15,
+			maxSize: 25,
+			minSize: 17,
 			color: MID_GRAY
 		});
 	}
 
 	// Contact block — left aligned, icons.
 	ctx.textAlign = 'left';
-	y += 62;
+	y += 66;
 	const rows = contactRows(card);
-	const textSize = 23;
-	const rowH = 46;
+	const textSize = 28;
+	const rowH = 54;
 	for (const row of rows) {
 		drawContactRow(ctx, row, M, y, contentW, textSize);
 		y += rowH;
@@ -336,17 +336,17 @@ async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard)
 	// QR code — centered at the bottom.
 	const hasQr = Boolean(card.qr?.enabled && card.qr.value.trim());
 	if (hasQr) {
-		const qrSize = 180;
-		const qy = H - M - qrSize - (card.qr!.label?.trim() ? 34 : 0);
+		const qrSize = 190;
+		const qy = H - M - qrSize - (card.qr!.label?.trim() ? 38 : 0);
 		const qr = await generateQrCanvas(card.qr!.value.trim(), qrSize);
 		const qx = cx - qrSize / 2;
 		ctx.drawImage(qr, qx, qy, qrSize, qrSize);
 		if (card.qr!.label?.trim()) {
 			ctx.textAlign = 'center';
-			drawText(ctx, card.qr!.label!, cx, qy + qrSize + 28, {
-				maxWidth: qrSize + 60,
-				maxSize: 18,
-				minSize: 13,
+			drawText(ctx, card.qr!.label!, cx, qy + qrSize + 30, {
+				maxWidth: qrSize + 80,
+				maxSize: 22,
+				minSize: 15,
 				color: MID_GRAY
 			});
 			ctx.textAlign = 'left';
@@ -355,82 +355,82 @@ async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard)
 }
 
 async function renderLandscape(ctx: CanvasRenderingContext2D, card: BusinessCard): Promise<void> {
-	const W = X3_HEIGHT; // 792
-	const H = X3_WIDTH; // 528
-	const M = 48;
+	const W = X3_HEIGHT; // rotated: 792
+	const H = X3_WIDTH; // rotated: 528
+	const M = 44;
 	const hasQr = Boolean(card.qr?.enabled && card.qr.value.trim());
-	const qrSize = 170;
+	const qrSize = 190;
 	const sideW = hasQr ? qrSize + M : 0;
 	const textW = W - M * 2 - sideW;
 
 	ctx.textAlign = 'left';
 	ctx.textBaseline = 'alphabetic';
-	let y = 108;
+	let y = 104;
 
 	const nickname = card.nickname?.trim();
 	if (nickname) {
 		drawText(ctx, nickname.toUpperCase(), M, y, {
 			maxWidth: textW,
-			maxSize: 60,
-			minSize: 32,
+			maxSize: 72,
+			minSize: 38,
 			weight: '700',
 			letterSpacing: 2
 		});
-		y += 42;
+		y += 50;
 		drawText(ctx, card.name, M, y, {
 			maxWidth: textW,
-			maxSize: 24,
-			minSize: 16,
+			maxSize: 30,
+			minSize: 19,
 			color: MID_GRAY
 		});
 	} else {
 		drawText(ctx, card.name.toUpperCase(), M, y, {
 			maxWidth: textW,
-			maxSize: 52,
-			minSize: 28,
+			maxSize: 62,
+			minSize: 34,
 			weight: '700',
 			letterSpacing: 2
 		});
 	}
 
 	if (card.role?.trim()) {
-		y += 44;
+		y += 50;
 		drawText(ctx, card.role, M, y, {
 			maxWidth: textW,
-			maxSize: 26,
-			minSize: 17,
+			maxSize: 32,
+			minSize: 20,
 			color: MID_GRAY
 		});
 	}
 
 	if (card.company?.trim()) {
-		y += 38;
+		y += 44;
 		drawText(ctx, card.company.toUpperCase(), M, y, {
 			maxWidth: textW,
-			maxSize: 21,
-			minSize: 14,
+			maxSize: 26,
+			minSize: 17,
 			weight: '600'
 		});
 	}
 
-	y += 36;
+	y += 40;
 	ctx.fillStyle = INK;
-	ctx.fillRect(M, y, 80, 3);
-	y += 16;
+	ctx.fillRect(M, y, 90, 4);
+	y += 18;
 
 	if (card.tagline?.trim()) {
-		y += 30;
+		y += 34;
 		drawText(ctx, `“${card.tagline.trim()}”`, M, y, {
 			maxWidth: textW,
-			maxSize: 20,
-			minSize: 14,
+			maxSize: 24,
+			minSize: 16,
 			color: MID_GRAY
 		});
 	}
 
-	y += 50;
-	const textSize = 22;
-	const rowH = 42;
+	y += 56;
+	const textSize = 26;
+	const rowH = 50;
 	for (const row of contactRows(card)) {
 		if (y > H - 36) break;
 		drawContactRow(ctx, row, M, y, textW, textSize);
@@ -440,15 +440,15 @@ async function renderLandscape(ctx: CanvasRenderingContext2D, card: BusinessCard
 	// Right column: QR centered vertically.
 	if (hasQr) {
 		const rx = W - M - qrSize;
-		const qy = (H - qrSize) / 2 - 20;
+		const qy = (H - qrSize) / 2 - 22;
 		const qr = await generateQrCanvas(card.qr!.value.trim(), qrSize);
 		ctx.drawImage(qr, rx, qy, qrSize, qrSize);
 		if (card.qr!.label?.trim()) {
 			ctx.textAlign = 'center';
-			drawText(ctx, card.qr!.label!, rx + qrSize / 2, qy + qrSize + 28, {
-				maxWidth: qrSize + 16,
-				maxSize: 17,
-				minSize: 13,
+			drawText(ctx, card.qr!.label!, rx + qrSize / 2, qy + qrSize + 32, {
+				maxWidth: qrSize + 24,
+				maxSize: 21,
+				minSize: 15,
 				color: MID_GRAY
 			});
 			ctx.textAlign = 'left';

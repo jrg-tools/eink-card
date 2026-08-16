@@ -16,6 +16,5 @@ export const defaultCard: BusinessCard = {
 	qr: {
 		enabled: false,
 		value: ''
-	},
-	template: 'minimal'
+	}
 };

@@ -122,10 +122,10 @@
 
 	<main class="layout">
 		<section class="preview-col" aria-label="Preview">
-			<CardPreview {card} />
 			<div class="orientation">
 				<OrientationSelector bind:orientation={card.orientation} />
 			</div>
+			<CardPreview {card} />
 		</section>
 
 		<section class="editor-col" aria-label="Editor">
@@ -228,7 +228,7 @@
 	}
 
 	.orientation {
-		margin-top: 16px;
+		margin-bottom: 16px;
 	}
 
 	.editor-col {

@@ -34,7 +34,7 @@
 	}
 
 	.screen {
-		width: min(100%, 400px);
+		width: min(100%, 300px);
 		border: 2px solid var(--ink);
 		border-radius: 6px;
 		padding: 10px;

@@ -14,13 +14,6 @@ export class DeviceUnavailableError extends CrossPointError {
 	}
 }
 
-export class UnsupportedDeviceError extends CrossPointError {
-	constructor(device: string) {
-		super(`CrossPoint detected, but this is a ${device}, not an X3.`);
-		this.name = 'UnsupportedDeviceError';
-	}
-}
-
 export class UploadFailedError extends CrossPointError {
 	constructor(detail?: string) {
 		super(`Unable to send card. The device rejected the upload.${detail ? ` (${detail})` : ''}`);
