@@ -34,7 +34,7 @@
 	}
 
 	.screen {
-		width: min(100%, 320px);
+		width: min(100%, 400px);
 		border: 2px solid var(--ink);
 		border-radius: 6px;
 		padding: 10px;
@@ -43,7 +43,7 @@
 	}
 
 	.device.landscape .screen {
-		width: min(100%, 460px);
+		width: min(100%, 560px);
 	}
 
 	canvas {

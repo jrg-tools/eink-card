@@ -4,6 +4,7 @@ export type TemplateId = 'minimal' | 'classic' | 'modern';
 export interface BusinessCard {
 	orientation: Orientation;
 	name: string;
+	nickname?: string;
 	role?: string;
 	company?: string;
 	email?: string;

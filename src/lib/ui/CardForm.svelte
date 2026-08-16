@@ -13,6 +13,11 @@
 	</div>
 
 	<div class="field">
+		<label for="nickname">Nickname</label>
+		<input id="nickname" type="text" bind:value={card.nickname} placeholder="janedoe" />
+	</div>
+
+	<div class="field">
 		<label for="role">Role</label>
 		<input id="role" type="text" bind:value={card.role} placeholder="Software Engineer" />
 	</div>

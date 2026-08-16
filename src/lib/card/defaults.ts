@@ -3,6 +3,7 @@ import type { BusinessCard } from './types';
 export const defaultCard: BusinessCard = {
 	orientation: 'portrait',
 	name: '',
+	nickname: '',
 	role: '',
 	company: '',
 	email: '',
