@@ -8,7 +8,7 @@ export class CrossPointError extends Error {
 export class DeviceUnavailableError extends CrossPointError {
 	constructor() {
 		super(
-			'X3 not detected. Make sure the X3 is awake, CrossPoint File Transfer is active, and you are on the same Wi-Fi network.'
+			'Device not detected. Make sure it is awake, CrossPoint File Transfer is active, and you are on the same Wi-Fi network.'
 		);
 		this.name = 'DeviceUnavailableError';
 	}
@@ -23,7 +23,7 @@ export class UploadFailedError extends CrossPointError {
 
 export class DeviceTimeoutError extends CrossPointError {
 	constructor() {
-		super('The X3 did not respond. Check that CrossPoint is still in File Transfer mode.');
+		super('The device did not respond. Check that CrossPoint is still in File Transfer mode.');
 		this.name = 'DeviceTimeoutError';
 	}
 }

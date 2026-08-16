@@ -1,6 +1,6 @@
-# X3 Business Card
+# E-ink Business Card
 
-A lightweight, self-hosted web app for creating a minimalistic digital business card optimized for the **Xteink X3** e-ink reader (528×792 px) running [CrossPoint Reader](http://crosspoint.local/), and sending it directly to the device over your local network.
+A lightweight, self-hosted web app for creating a minimalistic digital business card optimized for the **Xteink X3** (528×792 px) and **Xteink X4** (480×800 px) e-ink readers running [CrossPoint Reader](http://crosspoint.local/), and sending it directly to the device over your local network.
 
 > **Design once. Preview exactly. Send directly.**
 
@@ -10,10 +10,10 @@ A lightweight, self-hosted web app for creating a minimalistic digital business 
 2. Choose portrait or landscape orientation.
 3. See a live preview rendered exactly as the e-ink device will display it.
 4. Optionally add a QR code (URL or link of your choice).
-5. Detect a CrossPoint-powered X3 on your local network.
+5. Detect a CrossPoint-powered X3 or X4 on your local network (the app auto-selects the detected model).
 6. Send the generated 24-bit uncompressed BMP straight to the device, or download it as a fallback.
 
-Everything renders **client-side** in your browser: no accounts, no database, no personal data ever leaves your device (except the upload to your own X3). Your card is remembered in `localStorage`.
+Everything renders **client-side** in your browser: no accounts, no database, no personal data ever leaves your device (except the upload to your own device). Your card is remembered in `localStorage`.
 
 ## Tech
 
@@ -44,20 +44,20 @@ pnpm build   # production build
 docker compose up -d
 ```
 
-Then open `http://<docker-host>:3000` from a phone or desktop on the same Wi-Fi network as the X3.
+Then open `http://<docker-host>:3000` from a phone or desktop on the same Wi-Fi network as the e-reader.
 
-## Sending to the X3
+## Sending to the device
 
-1. On the X3, enable CrossPoint **File Transfer** mode.
+1. On the device, enable CrossPoint **File Transfer** mode.
 2. Make sure your phone/computer is on the same network.
-3. The app polls `http://crosspoint.local/api/status` every 3 s; when the header shows `● X3 CONNECTED`, press **SEND TO X3**.
-4. By default the card is uploaded once as `/.sleep/business-card.bmp` and **set as the sleep screen ("cover")**: the app switches the CrossPoint `sleepScreen` setting to `Custom` via `POST /api/settings`, so the card appears whenever the X3 sleeps. If the cover option is disabled in the app's device settings panel, the card is uploaded as `/business-card.bmp` instead.
+3. The app polls `http://crosspoint.local/api/status` every 3 s; when the header shows `● X3 CONNECTED` (or `● X4 CONNECTED`), press **SEND TO DEVICE**.
+4. By default the card is uploaded once as `/.sleep/business-card.bmp` and **set as the sleep screen ("cover")**: the app switches the CrossPoint `sleepScreen` setting to `Custom` via `POST /api/settings`, so the card appears whenever the device sleeps. If the cover option is disabled in the app's device settings panel, the card is uploaded as `/business-card.bmp` instead.
 
 > CrossPoint has no "display this image now" API endpoint; the sleep screen is the supported way to pin an image to the display. To show it immediately, just let the device sleep (or press the power button briefly if configured for sleep).
 
-If mDNS (`crosspoint.local`) doesn't resolve on your network, open the device settings panel in the app and enter the X3's IP address (shown on the device) instead.
+If mDNS (`crosspoint.local`) doesn't resolve on your network, open the device settings panel in the app and enter the device's IP address (shown on the device) instead.
 
-> Note: browsers block cross-origin requests to plain-HTTP local devices in some configurations. If direct browser→X3 requests fail, download the BMP and transfer it manually, or use the app's fallback options.
+> Note: browsers block cross-origin requests to plain-HTTP local devices in some configurations. If direct browser→device requests fail, download the BMP and transfer it manually, or use the app's fallback options.
 
 ## Architecture
 

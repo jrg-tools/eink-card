@@ -1,6 +1,7 @@
 import type { BusinessCard } from './types';
 
 export const defaultCard: BusinessCard = {
+	device: 'X3',
 	orientation: 'portrait',
 	name: '',
 	nickname: '',

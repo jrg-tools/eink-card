@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import type { BusinessCard } from '$lib/card/types';
+	import { DEVICE_MODELS, type BusinessCard, type DeviceModel } from '$lib/card/types';
 	import { renderBusinessCard } from '$lib/card/renderer';
 	import { validateCard } from '$lib/card/validation';
 	import { CrossPointClient } from '$lib/crosspoint/client';
@@ -16,6 +16,7 @@
 	import CardPreview from '$lib/ui/CardPreview.svelte';
 	import CardForm from '$lib/ui/CardForm.svelte';
 	import OrientationSelector from '$lib/ui/OrientationSelector.svelte';
+	import DeviceSelector from '$lib/ui/DeviceSelector.svelte';
 	import SendButton, { type SendState } from '$lib/ui/SendButton.svelte';
 
 	const FILENAME = 'business-card.bmp';
@@ -48,7 +49,15 @@
 		try {
 			const status = await client.status();
 			detectedDevice = status.device;
-			connection = status.device === 'X3' ? 'connected' : 'unsupported';
+			if (status.device === card.device) {
+				connection = 'connected';
+			} else if (DEVICE_MODELS.includes(status.device as DeviceModel)) {
+				// A supported device was found — switch to it automatically.
+				card.device = status.device as DeviceModel;
+				connection = 'connected';
+			} else {
+				connection = 'unsupported';
+			}
 		} catch {
 			connection = 'disconnected';
 		}
@@ -76,11 +85,11 @@
 				await client.setAsSleepScreen(blob, FILENAME);
 				sendState = 'success';
 				sendMessage =
-					'Card uploaded and set as sleep screen. It will appear whenever the X3 sleeps.';
+					'Card uploaded and set as sleep screen. It will appear whenever the device sleeps.';
 			} else {
 				await client.upload(blob, FILENAME);
 				sendState = 'success';
-				sendMessage = 'Card uploaded to X3. Open the image from the X3 file browser to display it.';
+				sendMessage = 'Card uploaded. Open the image from the device file browser to display it.';
 			}
 		} catch (err) {
 			sendState = 'error';
@@ -110,13 +119,19 @@
 </script>
 
 <svelte:head>
-	<title>X3 Business Card</title>
-	<meta name="description" content="Create and send a business card to your Xteink X3 e-reader." />
+	<title>E-ink Business Card</title>
+	<meta
+		name="description"
+		content="Create and send a business card to your Xteink X3 or X4 e-reader."
+	/>
 </svelte:head>
 
 <div class="app">
 	<header class="header">
-		<h1>X3 Card</h1>
+		<div class="brand">
+			<h1>E-ink Card</h1>
+			<DeviceSelector bind:device={card.device} />
+		</div>
 		<DeviceStatus state={connection} device={detectedDevice} />
 	</header>
 
@@ -144,7 +159,7 @@
 				</button>
 				{#if showSettings}
 					<div class="field">
-						<label for="device-url">X3 address</label>
+						<label for="device-url">Device address</label>
 						<input id="device-url" type="url" bind:value={deviceConfig.baseUrl} />
 					</div>
 					<div class="field cover-toggle">
@@ -156,8 +171,8 @@
 						<label for="set-sleep-screen">Set as sleep screen (cover) after upload</label>
 					</div>
 					<p class="hint-small">
-						Uploads the card as /.sleep/business-card.bmp and switches the X3 sleep screen mode to
-						“Custom”, so the card shows whenever the device sleeps.
+						Uploads the card as /.sleep/business-card.bmp and switches the device sleep screen mode
+						to “Custom”, so the card shows whenever the device sleeps.
 					</p>
 					<button type="button" class="btn" onclick={checkDevice}>Check again</button>
 					{#if deviceConfig.baseUrl.startsWith('http://') && !/crosspoint\.local|192\.168\.|10\.|172\./.test(deviceConfig.baseUrl)}
@@ -207,6 +222,12 @@
 	.header h1 {
 		font-size: 18px;
 		margin: 0;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 14px;
 	}
 
 	.layout {

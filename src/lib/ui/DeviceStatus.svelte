@@ -12,15 +12,15 @@
 	const label = $derived.by(() => {
 		switch (state) {
 			case 'connected':
-				return '● X3 CONNECTED';
+				return `● ${device || 'DEVICE'} CONNECTED`;
 			case 'checking':
-				return '◌ SEARCHING FOR X3';
+				return '◌ SEARCHING FOR DEVICE';
 			case 'disconnected':
-				return '○ X3 OFFLINE';
+				return '○ DEVICE OFFLINE';
 			case 'unsupported':
 				return `△ ${device || 'DEVICE'} DETECTED`;
 			default:
-				return '○ X3';
+				return '○ DEVICE';
 		}
 	});
 </script>

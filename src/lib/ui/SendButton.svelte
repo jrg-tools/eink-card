@@ -16,13 +16,13 @@
 			case 'generating':
 				return 'Preparing card…';
 			case 'uploading':
-				return 'Sending to X3…';
+				return 'Sending to device…';
 			case 'success':
-				return '✓ Card sent to X3';
+				return '✓ Card sent to device';
 			case 'error':
 				return '× Could not send — retry';
 			default:
-				return 'Send to X3';
+				return 'Send to device';
 		}
 	});
 

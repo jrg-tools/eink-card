@@ -1,4 +1,4 @@
-import { X3_WIDTH, X3_HEIGHT, type BusinessCard } from './types';
+import { DEVICES, type BusinessCard } from './types';
 import { encodeBmp } from './bmp';
 import { generateQrCanvas } from './qr';
 import { displayUrl } from './validation';
@@ -244,9 +244,12 @@ function drawContactRow(
 // Layouts
 // ---------------------------------------------------------------------------
 
-async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard): Promise<void> {
-	const W = X3_WIDTH;
-	const H = X3_HEIGHT;
+async function renderPortrait(
+	ctx: CanvasRenderingContext2D,
+	card: BusinessCard,
+	W: number,
+	H: number
+): Promise<void> {
 	const M = 40;
 	const contentW = W - M * 2;
 
@@ -354,9 +357,12 @@ async function renderPortrait(ctx: CanvasRenderingContext2D, card: BusinessCard)
 	}
 }
 
-async function renderLandscape(ctx: CanvasRenderingContext2D, card: BusinessCard): Promise<void> {
-	const W = X3_HEIGHT; // rotated: 792
-	const H = X3_WIDTH; // rotated: 528
+async function renderLandscape(
+	ctx: CanvasRenderingContext2D,
+	card: BusinessCard,
+	W: number, // rotated: device height
+	H: number // rotated: device width
+): Promise<void> {
 	const M = 44;
 	const hasQr = Boolean(card.qr?.enabled && card.qr.value.trim());
 	const qrSize = 190;
@@ -457,13 +463,14 @@ async function renderLandscape(ctx: CanvasRenderingContext2D, card: BusinessCard
 }
 
 /**
- * Render the card onto a canvas.
- * Portrait: 528×792. Landscape: 792×528 (canvas dimensions swapped).
+ * Render the card onto a canvas at the target device's native resolution.
+ * Portrait: width×height. Landscape: dimensions swapped.
  */
 export async function renderToCanvas(card: BusinessCard, canvas: HTMLCanvasElement): Promise<void> {
+	const spec = DEVICES[card.device] ?? DEVICES.X3;
 	const landscape = card.orientation === 'landscape';
-	canvas.width = landscape ? X3_HEIGHT : X3_WIDTH;
-	canvas.height = landscape ? X3_WIDTH : X3_HEIGHT;
+	canvas.width = landscape ? spec.height : spec.width;
+	canvas.height = landscape ? spec.width : spec.height;
 
 	// Ensure web fonts are loaded so the preview and the exported BMP
 	// render with identical glyphs and metrics.
@@ -483,30 +490,31 @@ export async function renderToCanvas(card: BusinessCard, canvas: HTMLCanvasEleme
 	ctx.textAlign = 'left';
 
 	if (landscape) {
-		await renderLandscape(ctx, card);
+		await renderLandscape(ctx, card, spec.height, spec.width);
 	} else {
-		await renderPortrait(ctx, card);
+		await renderPortrait(ctx, card, spec.width, spec.height);
 	}
 }
 
 /**
  * Render the business card and encode it as an uncompressed 24-bit BMP blob.
  *
- * The X3 always displays sleep/cover images in portrait (528×792), so a
- * landscape card is rendered at 792×528 and then rotated 90° into a
+ * The device always displays sleep/cover images in portrait, so a landscape
+ * card is rendered with swapped dimensions and then rotated 90° into a
  * portrait-sized bitmap.
  */
 export async function renderBusinessCard(card: BusinessCard): Promise<Blob> {
+	const spec = DEVICES[card.device] ?? DEVICES.X3;
 	const canvas = document.createElement('canvas');
 	await renderToCanvas(card, canvas);
 
 	let output = canvas;
 	if (card.orientation === 'landscape') {
 		const rotated = document.createElement('canvas');
-		rotated.width = X3_WIDTH;
-		rotated.height = X3_HEIGHT;
+		rotated.width = spec.width;
+		rotated.height = spec.height;
 		const rctx = rotated.getContext('2d')!;
-		rctx.translate(X3_WIDTH, 0);
+		rctx.translate(spec.width, 0);
 		rctx.rotate(Math.PI / 2);
 		rctx.drawImage(canvas, 0, 0);
 		output = rotated;
