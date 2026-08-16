@@ -1,0 +1,66 @@
+# Dependencies
+node_modules
+pnpm-store
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Development
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build
+dist
+.svelte-kit
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Documentation & metadata
+README.md
+CHANGELOG.md
+LICENSE
+.npmrc
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+Jenkinsfile
+
+# Package managers
+.yarn
+yarn.lock
+npm-shrinkwrap.json
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Misc
+.editorconfig
+tsconfig.json
+vitest.config.ts
+svelte.config.js
