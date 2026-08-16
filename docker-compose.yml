@@ -1,0 +1,10 @@
+services:
+  x3-business-card:
+    build: .
+    container_name: x3-business-card
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - ORIGIN=http://localhost:3000
