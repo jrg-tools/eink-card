@@ -489,11 +489,30 @@ export async function renderToCanvas(card: BusinessCard, canvas: HTMLCanvasEleme
 	}
 }
 
-/** Render the business card and encode it as an uncompressed 24-bit BMP blob. */
+/**
+ * Render the business card and encode it as an uncompressed 24-bit BMP blob.
+ *
+ * The X3 always displays sleep/cover images in portrait (528×792), so a
+ * landscape card is rendered at 792×528 and then rotated 90° into a
+ * portrait-sized bitmap.
+ */
 export async function renderBusinessCard(card: BusinessCard): Promise<Blob> {
 	const canvas = document.createElement('canvas');
 	await renderToCanvas(card, canvas);
-	const ctx = canvas.getContext('2d')!;
-	const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-	return encodeBmp(data.data, canvas.width, canvas.height);
+
+	let output = canvas;
+	if (card.orientation === 'landscape') {
+		const rotated = document.createElement('canvas');
+		rotated.width = X3_WIDTH;
+		rotated.height = X3_HEIGHT;
+		const rctx = rotated.getContext('2d')!;
+		rctx.translate(X3_WIDTH, 0);
+		rctx.rotate(Math.PI / 2);
+		rctx.drawImage(canvas, 0, 0);
+		output = rotated;
+	}
+
+	const ctx = output.getContext('2d', { willReadFrequently: true })!;
+	const data = ctx.getImageData(0, 0, output.width, output.height);
+	return encodeBmp(data.data, output.width, output.height);
 }
