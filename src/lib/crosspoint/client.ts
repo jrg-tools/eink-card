@@ -14,10 +14,6 @@ const LEGACY_ROOT_SLEEP_IMAGE = '/sleep.bmp';
 /** CrossPointSettings.h: SLEEP_SCREEN_MODE { DARK=0, LIGHT=1, CUSTOM=2, ... } */
 export const SLEEP_SCREEN_CUSTOM = 2;
 
-function joinPath(dir: string, filename: string): string {
-	return `${dir.replace(/\/+$/, '')}/${filename}`;
-}
-
 export class CrossPointClient {
 	private transport: CrossPointTransport;
 
@@ -49,10 +45,56 @@ export class CrossPointClient {
 
 	async upload(file: Blob, filename: string, path?: string): Promise<UploadResult> {
 		const dest = path ?? this.config.uploadPath;
-		// The device rejects uploads when the file already exists
-		// ("File already exists"), so delete any previous version first.
-		await this.deleteFile(joinPath(dest, filename));
+		// POST /upload overwrites existing files, so no pre-delete is needed.
 		return this.transport.upload(file, filename, dest);
+	}
+
+	/**
+	 * Create a directory via POST /mkdir. Errors are ignored (the directory
+	 * most likely already exists).
+	 */
+	async ensureDir(dir: string): Promise<void> {
+		const clean = dir.replace(/\/+$/, '');
+		const idx = clean.lastIndexOf('/');
+		const parent = idx <= 0 ? '/' : clean.slice(0, idx);
+		const name = clean.slice(idx + 1);
+		if (!name) return;
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
+		try {
+			await fetch(`${this.config.baseUrl}/mkdir`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams({ name, path: parent }),
+				signal: controller.signal
+			});
+		} catch {
+			// Non-fatal: the upload attempt will surface any real problem.
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
+	/** Check whether a file exists via GET /api/files on its parent directory. */
+	async fileExists(path: string): Promise<boolean> {
+		const idx = path.lastIndexOf('/');
+		const parent = idx <= 0 ? '/' : path.slice(0, idx);
+		const name = path.slice(idx + 1);
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
+		try {
+			const res = await fetch(
+				`${this.config.baseUrl}/api/files?path=${encodeURIComponent(parent)}`,
+				{ signal: controller.signal }
+			);
+			if (!res.ok) return false;
+			const items = (await res.json()) as Array<{ name: string; isDirectory: boolean }>;
+			return items.some((it) => !it.isDirectory && it.name === name);
+		} catch {
+			return false;
+		} finally {
+			clearTimeout(timer);
+		}
 	}
 
 	/**
@@ -78,16 +120,21 @@ export class CrossPointClient {
 
 	/**
 	 * Make the card show whenever the device sleeps ("cover"):
-	 * 1. Upload the image once as /.sleep/<filename> (the custom sleep dir).
-	 * 2. Set the sleepScreen setting to Custom (index 2 in CrossPointSettings.h).
+	 * 1. Ensure the /.sleep custom sleep-image directory exists.
+	 * 2. Upload the image once as /.sleep/<filename> (uploads overwrite).
+	 * 3. Remove a legacy root /sleep.bmp only if it actually exists
+	 *    (it takes priority over /.sleep/ images).
+	 * 4. Set the sleepScreen setting to Custom (index 2 in CrossPointSettings.h).
 	 *
-	 * A legacy root /sleep.bmp takes priority over /.sleep/ images, so it is
-	 * removed if present. CrossPoint exposes no "display image now" endpoint,
-	 * so this is the supported way to pin an image to the screen.
+	 * CrossPoint exposes no "display image now" endpoint, so this is the
+	 * supported way to pin an image to the screen.
 	 */
 	async setAsSleepScreen(file: Blob, filename: string): Promise<void> {
-		await this.deleteFile(LEGACY_ROOT_SLEEP_IMAGE);
+		await this.ensureDir(SLEEP_IMAGE_DIR);
 		await this.upload(file, filename, SLEEP_IMAGE_DIR);
+		if (await this.fileExists(LEGACY_ROOT_SLEEP_IMAGE)) {
+			await this.deleteFile(LEGACY_ROOT_SLEEP_IMAGE);
+		}
 		await this.applySettings({ sleepScreen: SLEEP_SCREEN_CUSTOM });
 	}
 
