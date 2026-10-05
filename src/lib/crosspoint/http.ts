@@ -23,7 +23,7 @@ export class HttpUploadTransport {
 			});
 			const text = await res.text().catch(() => '');
 			if (!res.ok) {
-				throw new UploadFailedError(`HTTP ${res.status}`);
+				throw new UploadFailedError(text.trim() || `HTTP ${res.status}`);
 			}
 			return { success: true, filename, response: text };
 		} catch (err) {

@@ -1,13 +1,23 @@
 import type { DeviceConfig, DeviceStatus, UploadResult } from './types';
 import { HttpUploadTransport } from './http';
-import { DeviceTimeoutError, DeviceUnavailableError, SettingsUpdateError } from './errors';
+import {
+	DeviceTimeoutError,
+	DeviceUnavailableError,
+	SettingsUpdateError,
+	UploadFailedError
+} from './errors';
 
 const STATUS_TIMEOUT_MS = 1500;
 const SETTINGS_TIMEOUT_MS = 5000;
 const REQUEST_TIMEOUT_MS = 5000;
 
-/** Directory scanned for custom sleep images in "Custom" sleep mode. */
+/** Directory scanned first for custom sleep images in "Custom" sleep mode. */
 export const SLEEP_IMAGE_DIR = '/.sleep';
+/**
+ * Fallback directory scanned when /.sleep has no images. Newer firmware
+ * refuses to create dot-folders over HTTP, so this is the one we can create.
+ */
+export const SLEEP_IMAGE_FALLBACK_DIR = '/sleep';
 /** Legacy root sleep image: takes priority over /.sleep/ directory images. */
 const LEGACY_ROOT_SLEEP_IMAGE = '/sleep.bmp';
 /** CrossPointSettings.h: SLEEP_SCREEN_MODE { DARK=0, LIGHT=1, CUSTOM=2, ... } */
@@ -54,7 +64,8 @@ export class CrossPointClient {
 
 	/**
 	 * List a directory via GET /api/files.
-	 * Returns null when the directory does not exist or cannot be listed.
+	 * Returns null when the request fails. Note: firmware answers [] (not an
+	 * error) for a directory that does not exist.
 	 */
 	async listFiles(dir: string): Promise<Array<{ name: string; isDirectory: boolean }> | null> {
 		const controller = new AbortController();
@@ -72,7 +83,7 @@ export class CrossPointClient {
 		}
 	}
 
-	/** Create a directory via POST /mkdir. */
+	/** Create a directory via POST /mkdir ("already exists" is ignored). */
 	async mkdir(dir: string): Promise<void> {
 		const clean = dir.replace(/\/+$/, '');
 		const idx = clean.lastIndexOf('/');
@@ -127,21 +138,27 @@ export class CrossPointClient {
 
 	/**
 	 * Make the card show whenever the device sleeps ("cover"):
-	 * 1. List /.sleep; create it only if the listing fails (does not exist).
-	 * 2. Upload the image once as /.sleep/<filename> (upload() deletes an
-	 *    existing file with the same name first).
+	 * 1. Upload into /.sleep (upload() deletes an existing file with the same
+	 *    name first). This only succeeds if the folder already exists:
+	 *    firmware refuses to create dot-folders via /mkdir, and /api/files
+	 *    returns [] for missing folders, so existence cannot be checked upfront.
+	 * 2. If that fails, create /sleep and upload there. Firmware only reads
+	 *    /sleep when /.sleep has no images.
 	 * 3. Remove a legacy root /sleep.bmp only if it actually exists
-	 *    (it takes priority over /.sleep/ images).
+	 *    (it takes priority over both folders).
 	 * 4. Set the sleepScreen setting to Custom (index 2 in CrossPointSettings.h).
 	 *
 	 * CrossPoint exposes no "display image now" endpoint, so this is the
 	 * supported way to pin an image to the screen.
 	 */
 	async setAsSleepScreen(file: Blob, filename: string): Promise<void> {
-		if ((await this.listFiles(SLEEP_IMAGE_DIR)) === null) {
-			await this.mkdir(SLEEP_IMAGE_DIR);
+		try {
+			await this.upload(file, filename, SLEEP_IMAGE_DIR);
+		} catch (err) {
+			if (!(err instanceof UploadFailedError)) throw err;
+			await this.mkdir(SLEEP_IMAGE_FALLBACK_DIR);
+			await this.upload(file, filename, SLEEP_IMAGE_FALLBACK_DIR);
 		}
-		await this.upload(file, filename, SLEEP_IMAGE_DIR);
 		if (await this.fileExists(LEGACY_ROOT_SLEEP_IMAGE)) {
 			await this.deleteFile(LEGACY_ROOT_SLEEP_IMAGE);
 		}

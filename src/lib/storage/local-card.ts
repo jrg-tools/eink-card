@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import type { BusinessCard } from '$lib/card/types';
+import { isDeviceModel, type BusinessCard } from '$lib/card/types';
 import { defaultCard } from '$lib/card/defaults';
 import type { DeviceConfig } from '$lib/crosspoint/types';
 import { defaultDeviceConfig } from '$lib/crosspoint/types';
@@ -12,7 +12,9 @@ export function loadCard(): BusinessCard {
 	try {
 		const raw = localStorage.getItem(CARD_KEY);
 		if (!raw) return structuredClone(defaultCard);
-		return { ...structuredClone(defaultCard), ...(JSON.parse(raw) as Partial<BusinessCard>) };
+		const card = { ...structuredClone(defaultCard), ...(JSON.parse(raw) as Partial<BusinessCard>) };
+		if (!isDeviceModel(card.device)) card.device = defaultCard.device;
+		return card;
 	} catch {
 		return structuredClone(defaultCard);
 	}

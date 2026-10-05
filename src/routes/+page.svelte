@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { DEVICE_MODELS, type BusinessCard, type DeviceModel } from '$lib/card/types';
+	import { DEVICES, resolveDeviceModel, type BusinessCard } from '$lib/card/types';
 	import { renderBusinessCard } from '$lib/card/renderer';
 	import { validateCard } from '$lib/card/validation';
 	import { CrossPointClient } from '$lib/crosspoint/client';
@@ -48,14 +48,14 @@
 		if (connection === 'unknown') connection = 'checking';
 		try {
 			const status = await client.status();
-			detectedDevice = status.device;
-			if (status.device === card.device) {
-				connection = 'connected';
-			} else if (DEVICE_MODELS.includes(status.device as DeviceModel)) {
+			const model = resolveDeviceModel(status.device);
+			if (model) {
 				// A supported device was found — switch to it automatically.
-				card.device = status.device as DeviceModel;
+				if (model !== card.device) card.device = model;
+				detectedDevice = DEVICES[model].short;
 				connection = 'connected';
 			} else {
+				detectedDevice = status.device;
 				connection = 'unsupported';
 			}
 		} catch {
@@ -122,7 +122,7 @@
 	<title>E-ink Business Card</title>
 	<meta
 		name="description"
-		content="Create and send a business card to your Xteink X3 or X4 e-reader."
+		content="Create and send a business card to your Xteink X3, X4, X4 Pro or X4 Classic e-reader."
 	/>
 </svelte:head>
 
@@ -171,8 +171,8 @@
 						<label for="set-sleep-screen">Set as sleep screen (cover) after upload</label>
 					</div>
 					<p class="hint-small">
-						Uploads the card as /.sleep/business-card.bmp and switches the device sleep screen mode
-						to “Custom”, so the card shows whenever the device sleeps.
+						Uploads the card into /.sleep (or /sleep if that folder doesn't exist yet) and switches
+						the device sleep screen mode to “Custom”, so the card shows whenever the device sleeps.
 					</p>
 					<button type="button" class="btn" onclick={checkDevice}>Check again</button>
 					{#if deviceConfig.baseUrl.startsWith('http://') && !/crosspoint\.local|192\.168\.|10\.|172\./.test(deviceConfig.baseUrl)}
@@ -212,6 +212,8 @@
 
 	.header {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 0;
@@ -226,6 +228,7 @@
 
 	.brand {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 14px;
 	}

@@ -15,7 +15,7 @@
 			title="{DEVICES[model].label} ({DEVICES[model].width}×{DEVICES[model].height})"
 			onclick={() => (device = model)}
 		>
-			{model}
+			{DEVICES[model].short}
 		</button>
 	{/each}
 </div>
@@ -23,12 +23,14 @@
 <style>
 	.selector {
 		display: inline-flex;
+		flex-wrap: wrap;
 		border: 2px solid var(--ink);
 	}
 
 	.option {
 		min-height: 32px;
-		padding: 2px 14px;
+		padding: 2px 12px;
+		white-space: nowrap;
 		background: var(--paper);
 		border: none;
 		font-family: var(--font);

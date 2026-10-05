@@ -1,6 +1,6 @@
 # E-ink Business Card
 
-A lightweight, self-hosted web app for creating a minimalistic digital business card optimized for the **Xteink X3** (528×792 px) and **Xteink X4** (480×800 px) e-ink readers running [CrossPoint Reader](http://crosspoint.local/), and sending it directly to the device over your local network.
+A lightweight, self-hosted web app for creating a minimalistic digital business card optimized for the Xteink family of e-ink readers — **X3** (528×792 px), **X4**, **X4 Pro** and **X4 Classic** (480×800 px) — running [CrossPoint Reader](http://crosspoint.local/), and sending it directly to the device over your local network.
 
 > **Design once. Preview exactly. Send directly.**
 
@@ -10,7 +10,7 @@ A lightweight, self-hosted web app for creating a minimalistic digital business 
 2. Choose portrait or landscape orientation.
 3. See a live preview rendered exactly as the e-ink device will display it.
 4. Optionally add a QR code (URL or link of your choice).
-5. Detect a CrossPoint-powered X3 or X4 on your local network (the app auto-selects the detected model).
+5. Detect a CrossPoint-powered Xteink device on your local network (the app auto-selects the detected model, whether CrossPoint reports it as `X3`/`X4` or by board name such as `xteink_x4_classic`).
 6. Send the generated 24-bit uncompressed BMP straight to the device, or download it as a fallback.
 
 Everything renders **client-side** in your browser: no accounts, no database, no personal data ever leaves your device (except the upload to your own device). Your card is remembered in `localStorage`.
@@ -50,8 +50,8 @@ Then open `http://<docker-host>:3000` from a phone or desktop on the same Wi-Fi 
 
 1. On the device, enable CrossPoint **File Transfer** mode.
 2. Make sure your phone/computer is on the same network.
-3. The app polls `http://crosspoint.local/api/status` every 3 s; when the header shows `● X3 CONNECTED` (or `● X4 CONNECTED`), press **SEND TO DEVICE**.
-4. By default the card is uploaded once as `/.sleep/business-card.bmp` and **set as the sleep screen ("cover")**: the app switches the CrossPoint `sleepScreen` setting to `Custom` via `POST /api/settings`, so the card appears whenever the device sleeps. If the cover option is disabled in the app's device settings panel, the card is uploaded as `/business-card.bmp` instead.
+3. The app polls `http://crosspoint.local/api/status` every 3 s; when the header shows `● <MODEL> CONNECTED` (e.g. `● X4 CLASSIC CONNECTED`), press **SEND TO DEVICE**.
+4. By default the card is uploaded once as `/.sleep/business-card.bmp` (or `/sleep/business-card.bmp` when `/.sleep` doesn't exist, since newer firmware won't create dot-folders over HTTP) and **set as the sleep screen ("cover")**: the app switches the CrossPoint `sleepScreen` setting to `Custom` via `POST /api/settings`, so the card appears whenever the device sleeps. If the cover option is disabled in the app's device settings panel, the card is uploaded as `/business-card.bmp` instead.
 
 > CrossPoint has no "display this image now" API endpoint; the sleep screen is the supported way to pin an image to the display. To show it immediately, just let the device sleep (or press the power button briefly if configured for sleep).
 
@@ -68,7 +68,7 @@ Browser (SvelteKit UI)
  ├── Live e-ink preview (renders the actual canvas)
  └── CrossPoint client
        ├── GET  http://crosspoint.local/api/status
-       ├── POST http://crosspoint.local/upload?path=/.sleep    (business-card.bmp)
+       ├── POST http://crosspoint.local/upload?path=/.sleep    (business-card.bmp; falls back to /sleep)
        └── POST http://crosspoint.local/api/settings           ({"sleepScreen": 2} = Custom)
 ```
 

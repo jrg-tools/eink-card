@@ -5,7 +5,8 @@ export interface DeviceStatus {
 	rssi: number;
 	freeHeap: number;
 	uptime: number;
-	device: 'X3' | 'X4' | string;
+	/** "X3"/"X4" on legacy builds, or a board name such as "xteink_x4_classic". */
+	device: string;
 }
 
 export interface UploadResult {
@@ -16,7 +17,7 @@ export interface UploadResult {
 
 export interface DeviceConfig {
 	baseUrl: string;
-	/** Upload the card into /.sleep/ and switch the sleep screen to Custom. */
+	/** Upload the card into /.sleep/ (or /sleep/) and switch the sleep screen to Custom. */
 	setAsSleepScreen: boolean;
 }
 
