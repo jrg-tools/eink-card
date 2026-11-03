@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import type { BusinessCard } from '$lib/card/types';
-	import { renderToCanvas } from '$lib/card/renderer';
+	import { browser } from '$app/env';
+	import type { BusinessCard } from '#lib/card/types.ts';
+	import { renderToCanvas } from '#lib/card/renderer.ts';
 
 	let { card }: { card: BusinessCard } = $props();
 

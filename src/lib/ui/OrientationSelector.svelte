@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Orientation } from '$lib/card/types';
+	import type { Orientation } from '#lib/card/types.ts';
 
 	let { orientation = $bindable() }: { orientation: Orientation } = $props();
 </script>

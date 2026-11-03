@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ConnectionState } from '$lib/crosspoint/types';
+	import type { ConnectionState } from '#lib/crosspoint/types.ts';
 
 	let {
 		state,

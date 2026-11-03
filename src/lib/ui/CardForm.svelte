@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BusinessCard } from '$lib/card/types';
+	import type { BusinessCard } from '#lib/card/types.ts';
 
 	let { card = $bindable() }: { card: BusinessCard } = $props();
 </script>

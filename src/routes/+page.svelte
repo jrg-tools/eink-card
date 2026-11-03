@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { DEVICES, resolveDeviceModel, type BusinessCard } from '$lib/card/types';
-	import { renderBusinessCard } from '$lib/card/renderer';
-	import { validateCard } from '$lib/card/validation';
-	import { CrossPointClient } from '$lib/crosspoint/client';
-	import type { ConnectionState, DeviceConfig } from '$lib/crosspoint/types';
+	import { browser } from '$app/env';
+	import { DEVICES, resolveDeviceModel, type BusinessCard } from '#lib/card/types.ts';
+	import { renderBusinessCard } from '#lib/card/renderer.ts';
+	import { validateCard } from '#lib/card/validation.ts';
+	import { CrossPointClient } from '#lib/crosspoint/client.ts';
+	import type { ConnectionState, DeviceConfig } from '#lib/crosspoint/types.ts';
 	import {
 		loadCard,
 		saveCard,
 		clearCard,
 		loadDeviceConfig,
 		saveDeviceConfig
-	} from '$lib/storage/local-card';
-	import DeviceStatus from '$lib/ui/DeviceStatus.svelte';
-	import CardPreview from '$lib/ui/CardPreview.svelte';
-	import CardForm from '$lib/ui/CardForm.svelte';
-	import OrientationSelector from '$lib/ui/OrientationSelector.svelte';
-	import DeviceSelector from '$lib/ui/DeviceSelector.svelte';
-	import SendButton, { type SendState } from '$lib/ui/SendButton.svelte';
+	} from '#lib/storage/local-card.ts';
+	import DeviceStatus from '#lib/ui/DeviceStatus.svelte';
+	import CardPreview from '#lib/ui/CardPreview.svelte';
+	import CardForm from '#lib/ui/CardForm.svelte';
+	import OrientationSelector from '#lib/ui/OrientationSelector.svelte';
+	import DeviceSelector from '#lib/ui/DeviceSelector.svelte';
+	import SendButton, { type SendState } from '#lib/ui/SendButton.svelte';
 
 	const FILENAME = 'business-card.bmp';
 	const POLL_MS = 3000;

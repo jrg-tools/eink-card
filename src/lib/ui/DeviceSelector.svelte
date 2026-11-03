@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DEVICE_MODELS, DEVICES, type DeviceModel } from '$lib/card/types';
+	import { DEVICE_MODELS, DEVICES, type DeviceModel } from '#lib/card/types.ts';
 
 	let { device = $bindable() }: { device: DeviceModel } = $props();
 </script>

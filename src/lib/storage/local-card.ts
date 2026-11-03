@@ -1,8 +1,8 @@
-import { browser } from '$app/environment';
-import { isDeviceModel, type BusinessCard } from '$lib/card/types';
-import { defaultCard } from '$lib/card/defaults';
-import type { DeviceConfig } from '$lib/crosspoint/types';
-import { defaultDeviceConfig } from '$lib/crosspoint/types';
+import { browser } from '$app/env';
+import { isDeviceModel, type BusinessCard } from '#lib/card/types.ts';
+import { defaultCard } from '#lib/card/defaults.ts';
+import type { DeviceConfig } from '#lib/crosspoint/types.ts';
+import { defaultDeviceConfig } from '#lib/crosspoint/types.ts';
 
 const CARD_KEY = 'x3-business-card';
 const DEVICE_KEY = 'x3-device-config';
